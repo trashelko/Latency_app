@@ -143,7 +143,7 @@ def save_gps_data(df, customer_name, year_month):
     df.to_csv(filepath, index=False)
 
     month_name = datetime.strptime(month, "%m").strftime("%B") # Convert month number to month name
-    print(f"Saved {month_name}'s GPS data to {filepath}.")
+    print(f"Saved {month_name}'s GPS data to {filepath}")
     return filepath
 
 def prompt_for_month():
