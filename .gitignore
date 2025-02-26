@@ -1,6 +1,8 @@
 # Large data files
 data/raw/gps_data_*.csv
 data/processed/processed_gps_data_*.csv
+data/processed/processed_gps_data_*.pkl
+data/processed/processed_polygon_dict_*.pkl
 
 # Optional: Common patterns to ignore
 __pycache__/

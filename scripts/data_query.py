@@ -149,10 +149,7 @@ def save_gps_data(df, customer_name, year_month):
 def prompt_for_month():
     """Prompts the user to input a month in YYYY-MM format."""
     current_month = datetime.now().strftime("%Y-%m")
-    print("\n=== Query GPS Data ===")
-    print(f"Please enter the month you want to extract data for.")
-    print(f"Format: YYYY-MM (e.g., 2025-01 for January 2025)")
-    print(f"Press Enter to use current month ({current_month})")
+    print(f"Please enter the month in format YYYY-MM (e.g., 2025-01 for January 2025) or press Enter to use current month ({current_month})")
     
     while True:
         user_input = input("Month [YYYY-MM]: ").strip()
@@ -183,6 +180,9 @@ def get_default_month():
 
 def main():
     """Main function to run the script with smart month selection."""
+    
+    print("\n=== Query GPS Data ===")
+    
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--manual", 
