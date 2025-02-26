@@ -1,0 +1,6 @@
+# Large data files
+data/raw/gps_data_*.csv
+data/processed/processed_gps_data_*.csv
+
+# Optional: Common patterns to ignore
+__pycache__/
