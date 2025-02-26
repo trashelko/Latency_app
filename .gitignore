@@ -4,3 +4,5 @@ data/processed/processed_gps_data_*.csv
 
 # Optional: Common patterns to ignore
 __pycache__/
+.DS_Store
+**/.DS_Store
