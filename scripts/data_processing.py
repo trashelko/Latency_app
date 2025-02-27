@@ -1,4 +1,3 @@
-import data_query
 from data_query import get_default_month, prompt_for_month
 
 # Essential libraries
@@ -9,9 +8,6 @@ import datetime
 import pickle
 import argparse
 from datetime import datetime
-import time
-import csv
-import re
 # import random
 import warnings
 
@@ -52,6 +48,7 @@ def convert_to_polygon(polygon_str: str) -> List[List[float]]:
 def build_spatial_index(polygons_df: pd.DataFrame) -> Tuple[index.Index, Dict]:
     idx = index.Index()
     polygon_dict = {}
+    name_to_idx_map = {}
     
     polygons_df['Polygon_coords'] = polygons_df['Polygon'].apply(convert_to_polygon)
     
@@ -64,8 +61,81 @@ def build_spatial_index(polygons_df: pd.DataFrame) -> Tuple[index.Index, Dict]:
         polygon = Polygon(coords)
         idx.insert(i, bounds)
         polygon_dict[i] = (row['LocationName'], polygon)
+        name_to_idx_map[row['LocationName']] = i
+
+    polygon_dict['name_to_idx_map'] = name_to_idx_map
     
     return idx, polygon_dict
+
+def build_and_save_persistent_spatial_index(customer_name="Zim"):
+    """
+    Build and save a persistent spatial index and polygon dictionary
+    that doesn't need to be recreated monthly.
+    """
+    
+    # Set up paths for the project
+    BASE_DIR = Path(__file__).parent.parent.absolute()
+    RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+    PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+    PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Load polygons data
+    filename = f"geofences_{customer_name}.csv"
+    filepath = RAW_DATA_DIR / filename
+    if not filepath.exists():
+        raise FileNotFoundError(f"{customer_name} geofences data file not found: {filepath}")
+    
+    polygons_df = pd.read_csv(filepath, usecols=['LocationName', 'Polygon'])
+    print(f"Building persistent spatial index for {len(polygons_df)} {customer_name} geofences")
+    
+    # Build the spatial index and polygon dictionary
+    spatial_idx, polygon_dict = build_spatial_index(polygons_df)
+    
+    # Save as persistent files (no month/year in filename)
+    spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
+    polygon_dict_path = PROCESSED_DATA_DIR / f"processed_polygon_dict_{customer_name}.pkl"
+    
+    # Save polygon dictionary
+    with open(polygon_dict_path, 'wb') as f:
+        pickle.dump(polygon_dict, f)
+    
+    # Save spatial index (if needed - depends on how you use it)
+    with open(spatial_idx_path, 'wb') as f:
+        pickle.dump(spatial_idx, f)
+    
+    print(f"Saved spatial index and polygon dictionary for latest {customer_name} geofences.")
+    # print(f"  - Spatial index: {spatial_idx_path}")
+    # print(f"  - Polygon dict: {polygon_dict_path}")
+    
+    return spatial_idx, polygon_dict
+
+def load_persistent_spatial_index(customer_name="Zim"):
+    """
+    Load the persistent spatial index and polygon dictionary.
+    """
+    
+    # Set up paths for the project
+    BASE_DIR = Path(__file__).parent.parent.absolute()
+    PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+    
+    # File paths
+    spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
+    polygon_dict_path = PROCESSED_DATA_DIR / f"processed_polygon_dict_{customer_name}.pkl"
+    
+    # Check if files exist
+    if not spatial_idx_path.exists() or not polygon_dict_path.exists():
+        print(f"Persistent spatial index not found. Creating new one...")
+        return build_and_save_persistent_spatial_index(customer_name)
+    
+    # Load files
+    with open(spatial_idx_path, 'rb') as f:
+        spatial_idx = pickle.load(f)
+    
+    with open(polygon_dict_path, 'rb') as f:
+        polygon_dict = pickle.load(f)
+    
+    # print(f"Loaded persistent spatial index for {customer_name}")
+    return spatial_idx, polygon_dict
 
 def find_containing_polygon(points: np.ndarray, idx: index.Index, polygon_dict: Dict) -> List[Optional[str]]:
     results = []
@@ -194,7 +264,7 @@ def get_processed_gpsData_and_polygons(
     land_path: str = BASE_DIR / "data" / "ne_10m_land.shp",
     buffer_degrees: float = 0.1,
     latency_threshold: int = 24
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
     """
     Process GPS data with both polygon containment and sea detection in one call.
     
@@ -236,7 +306,7 @@ def get_processed_gpsData_and_polygons(
     
     # Initialize spatial indexing for polygons
     print(f"Building spatial index for geofences...")
-    spatial_idx, polygon_dict = build_spatial_index(polygons_df)
+    spatial_idx, polygon_dict = load_persistent_spatial_index(customer_name)
 
     # Load land geometry
     print(f"Loaded land geometry from: {land_path}")
