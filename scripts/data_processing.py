@@ -48,7 +48,6 @@ def convert_to_polygon(polygon_str: str) -> List[List[float]]:
 def build_spatial_index(polygons_df: pd.DataFrame) -> Tuple[index.Index, Dict]:
     idx = index.Index()
     polygon_dict = {}
-    name_to_idx_map = {}
     
     polygons_df['Polygon_coords'] = polygons_df['Polygon'].apply(convert_to_polygon)
     
@@ -61,9 +60,6 @@ def build_spatial_index(polygons_df: pd.DataFrame) -> Tuple[index.Index, Dict]:
         polygon = Polygon(coords)
         idx.insert(i, bounds)
         polygon_dict[i] = (row['LocationName'], polygon)
-        name_to_idx_map[row['LocationName']] = i
-
-    polygon_dict['name_to_idx_map'] = name_to_idx_map
     
     return idx, polygon_dict
 
@@ -93,7 +89,7 @@ def build_and_save_persistent_spatial_index(customer_name="Zim"):
     
     # Save as persistent files (no month/year in filename)
     spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
-    polygon_dict_path = PROCESSED_DATA_DIR / f"processed_polygon_dict_{customer_name}.pkl"
+    polygon_dict_path = PROCESSED_DATA_DIR / f"polygon_dict_{customer_name}.pkl"
     
     # Save polygon dictionary
     with open(polygon_dict_path, 'wb') as f:
@@ -120,7 +116,7 @@ def load_persistent_spatial_index(customer_name="Zim"):
     
     # File paths
     spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
-    polygon_dict_path = PROCESSED_DATA_DIR / f"processed_polygon_dict_{customer_name}.pkl"
+    polygon_dict_path = PROCESSED_DATA_DIR / f"polygon_dict_{customer_name}.pkl"
     
     # Check if files exist
     if not spatial_idx_path.exists() or not polygon_dict_path.exists():
@@ -361,7 +357,7 @@ def save_processed_data(processed_gps, polygon_stats, polygon_dict, customer_nam
     polygon_stats.to_csv(stats_filepath, index=False)
     
     # Save polygon dictionary
-    dict_filename = f"processed_polygon_dict_{customer_name}_{year}_{month}.pkl"
+    dict_filename = f"polygon_dict_{customer_name}.pkl"
     dict_filepath = PROCESSED_DATA_DIR / dict_filename
     with open(dict_filepath, 'wb') as f:
         pickle.dump(polygon_dict, f)

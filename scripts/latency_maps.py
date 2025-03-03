@@ -221,7 +221,7 @@ def plot_latency(polygon_dict, polygons_df, center_lat=0, center_lon=0, severe_o
             radius = calculate_radius(total_messages, max_messages)
 
             severity = poly_data['severity']
-            color = get_color(severity,max_severity)
+            color = get_color(severity, max_severity)
             
             popup_html = f"""
             <div style='width:300px'>
@@ -374,7 +374,7 @@ def load_month_data(year_month, customer_name='Zim'):
     # Construct filenames
     gps_filename = f"processed_gps_data_{customer_name}_{year}_{month}.csv"
     stats_filename = f"processed_geofence_stats_{customer_name}_{year}_{month}.csv"
-    dict_filename = f"processed_polygon_dict_{customer_name}_{year}_{month}.pkl"
+    dict_filename = f"polygon_dict_{customer_name}.pkl"
     
     # Construct file paths
     gps_filepath = PROCESSED_DATA_DIR / gps_filename

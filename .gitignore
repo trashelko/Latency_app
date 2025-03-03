@@ -1,10 +1,10 @@
 # Large data files
-data/raw/gps_data_*.csv
-data/processed/processed_gps_data_*.csv
-data/processed/processed_gps_data_*.pkl
-data/processed/processed_polygon_dict_*.pkl
+/data/
 
 # Optional: Common patterns to ignore
 __pycache__/
 .DS_Store
 **/.DS_Store
+
+# Maps themself
+/maps/
