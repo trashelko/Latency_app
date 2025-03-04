@@ -1,5 +1,5 @@
 from data_query import get_default_month, prompt_for_month
-from config import RAW_DATA_DIR,PROCESSED_DATA_DIR
+from config import BASE_DIR,RAW_DATA_DIR,PROCESSED_DATA_DIR,DEFAULT_CUSTOMER
 
 # Essential libraries
 import pandas as pd
@@ -70,11 +70,11 @@ def build_and_save_persistent_spatial_index(customer_name="Zim"):
     that doesn't need to be recreated monthly.
     """
     
-    # Set up paths for the project
-    BASE_DIR = Path(__file__).parent.parent.absolute()
-    RAW_DATA_DIR = BASE_DIR / "data" / "raw"
-    PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
-    PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # # Set up paths for the project
+    # BASE_DIR = Path(__file__).parent.parent.absolute()
+    # RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+    # PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+    # PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
     
     # Load polygons data
     filename = f"geofences_{customer_name}.csv"
@@ -111,9 +111,9 @@ def load_persistent_spatial_index(customer_name="Zim"):
     Load the persistent spatial index and polygon dictionary.
     """
     
-    # Set up paths for the project
-    BASE_DIR = Path(__file__).parent.parent.absolute()
-    PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+    # # Set up paths for the project
+    # BASE_DIR = Path(__file__).parent.parent.absolute()
+    # PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
     
     # File paths
     spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
@@ -152,7 +152,8 @@ def find_containing_polygon(points: np.ndarray, idx: index.Index, polygon_dict: 
     
     return results
 
-def process_gps_data(gps_data: pd.DataFrame, spatial_idx: index.Index, polygon_dict: Dict, 
+def process_gps_data(gps_data: pd.DataFrame, spatial_idx: index.Index, polygon_dict: Dict,
+                     customer_name=DEFAULT_CUSTOMER,  
                      land_geometry=None, buffer_degrees=0.1) -> pd.DataFrame:
     """
     Process GPS data with both polygon containment and sea detection.
@@ -181,7 +182,7 @@ def process_gps_data(gps_data: pd.DataFrame, spatial_idx: index.Index, polygon_d
     
     # Find containing polygons
     points = df[['Lat', 'Lon']].values
-    df['in_Zim_polygon'] = find_containing_polygon(points, spatial_idx, polygon_dict)
+    df[f'in_{customer_name}_polygon'] = find_containing_polygon(points, spatial_idx, polygon_dict)
     
     # If land geometry is provided, determine if points are in sea
     if land_geometry is not None:
@@ -215,12 +216,14 @@ def calculate_severity(latency_msg_ratio: float, total_messages: int, max_messag
     volume_factor = np.log10(total_messages * total_devices + 0.1) / np.log10(max_messages * max_devices)
     return round(((latency_msg_ratio + latency_dev_ratio) / 2) * volume_factor, 1)
 
-def get_geofence_stats(polygons_df: pd.DataFrame, gps_data: pd.DataFrame, latency_threshold: int = 24) -> pd.DataFrame:
+def get_geofence_stats(polygons_df: pd.DataFrame, gps_data: pd.DataFrame, 
+                       customer_name=DEFAULT_CUSTOMER,
+                       latency_threshold: int = 24) -> pd.DataFrame:
     result_df = polygons_df.copy()
     stats = []
     
     for polygon_name in polygons_df['LocationName']:
-        gps_in_polygon = gps_data[gps_data['in_Zim_polygon'] == polygon_name]
+        gps_in_polygon = gps_data[gps_data[f'in_{customer_name}_polygon'] == polygon_name]
         polygon_latency = gps_in_polygon['t_diff'] >= pd.Timedelta(hours=latency_threshold)
         
         all_devices = gps_in_polygon['DeviceID'].unique()
