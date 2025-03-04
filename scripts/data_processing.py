@@ -1,4 +1,5 @@
 from data_query import get_default_month, prompt_for_month
+from config import RAW_DATA_DIR,PROCESSED_DATA_DIR
 
 # Essential libraries
 import pandas as pd
@@ -22,10 +23,10 @@ from typing import List, Tuple, Dict, Optional
 
 # from global_land_mask import globe
 
-# Set up paths for the project
-BASE_DIR = Path(__file__).parent.parent.absolute()
-RAW_DATA_DIR = BASE_DIR / "data" / "raw"
-PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
+# # Set up paths for the project
+# BASE_DIR = Path(__file__).parent.parent.absolute()
+# RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+# PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
 
 def detect_date_format(date_series):
     for fmt in ["%Y-%m-%d %H:%M:%S.%f",'%d/%m/%Y %H:%M','%m/%d/%Y %H:%M']:
