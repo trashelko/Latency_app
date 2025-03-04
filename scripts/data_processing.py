@@ -204,6 +204,9 @@ def process_gps_data(gps_data: pd.DataFrame, spatial_idx: index.Index, polygon_d
 
 def calculate_severity(latency_msg_ratio: float, total_messages: int, max_messages: int,
                       latency_dev_ratio: float, total_devices: int, max_devices: int) -> float:
+    if total_messages == 0 or total_devices == 0:
+        return 0.0
+    
     volume_factor = np.log10(total_messages * total_devices + 0.1) / np.log10(max_messages * max_devices)
     return round(((latency_msg_ratio + latency_dev_ratio) / 2) * volume_factor, 1)
 

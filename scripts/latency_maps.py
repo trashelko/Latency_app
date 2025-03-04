@@ -250,7 +250,7 @@ def plot_latency(polygon_dict, polygons_df, center_lat=0, center_lon=0, severe_o
     
     return m
 
-def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', zoom_start=2,
+def plot_dual_gps_heatmap(df, month, latency_H=24, lat_col='Lat', lon_col='Lon', zoom_start=2,
                          radius=15, show_markers=False,
                          latency_gradient = {0.4: '#DC143C', 0.65: '#FF4500',0.85: '#FFD700'},
                          normal_gradient = {0.4: '#4169E1',  0.65: '#20B2AA', 0.85: '#00FF00'}):
@@ -273,25 +273,16 @@ def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', 
     print(f"Normal points: {len(df_normal)} ({len(df_normal)/len(df)*100:.1f}%)")
     print(f"Latency points: {len(df_latency)} ({len(df_latency)/len(df)*100:.1f}%)")
     
+    # Create all feature groups first
+    latency_layer = folium.FeatureGroup(name='Latency Points', overlay=True, control=True)
+    normal_layer = folium.FeatureGroup(name='Normal Points', overlay=True, control=True)
+    
     # Prepare data for both heatmaps
     latency_data = [[row[lat_col], row[lon_col]] for _, row in df_latency.iterrows()]
     normal_data = [[row[lat_col], row[lon_col]] for _, row in df_normal.iterrows()]
     
-    # Add latency points heatmap layer
-    if len(latency_data) > 0:
-        latency_layer = folium.FeatureGroup(name='Latency Points')
-        HeatMap(latency_data,
-                name='Latency Points',
-                min_opacity=0.3,
-                radius=radius,
-                blur=15,
-                max_zoom=1,
-                gradient=latency_gradient).add_to(latency_layer)
-    latency_layer.add_to(m)
-
-    # Add normal points heatmap layer
+    # Add normal points heatmap layer - First to render (base layer)
     if len(normal_data) > 0:
-        normal_layer = folium.FeatureGroup(name='Normal Points')
         HeatMap(normal_data,
                 name='Normal Points',
                 min_opacity=0.3,
@@ -299,12 +290,21 @@ def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', 
                 blur=15,
                 max_zoom=1,
                 gradient=normal_gradient).add_to(normal_layer)
-    normal_layer.add_to(m)
+    
+    # Add latency points heatmap layer - Second to render (top layer)
+    if len(latency_data) > 0:
+        HeatMap(latency_data,
+                name='Latency Points',
+                min_opacity=0.3,
+                radius=radius,
+                blur=15,
+                max_zoom=1,
+                gradient=latency_gradient).add_to(latency_layer)
     
     # Optionally add marker clusters
     if show_markers:
         # Normal points markers
-        normal_cluster = MarkerCluster(name='Normal Markers').add_to(m)
+        normal_cluster = MarkerCluster(name='Normal Markers')
         for idx, row in df_normal.iterrows():
             folium.CircleMarker(
                 location=[row[lat_col], row[lon_col]],
@@ -314,9 +314,10 @@ def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', 
                 fill=True,
                 popup=f"Normal - Lat: {row[lat_col]:.6f}, Lon: {row[lon_col]:.6f}"
             ).add_to(normal_cluster)
+        normal_cluster.add_to(m)
             
         # Latency points markers
-        latency_cluster = MarkerCluster(name='Latency Markers').add_to(m)
+        latency_cluster = MarkerCluster(name='Latency Markers')
         for idx, row in df_latency.iterrows():
             folium.CircleMarker(
                 location=[row[lat_col], row[lon_col]],
@@ -326,9 +327,14 @@ def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', 
                 fill=True,
                 popup=f"Latency - Lat: {row[lat_col]:.6f}, Lon: {row[lon_col]:.6f}"
             ).add_to(latency_cluster)
+        latency_cluster.add_to(m)
     
-    # Add layer control
-    folium.LayerControl().add_to(m)
+    # Add the layers to the map in the desired order - latency first (bottom), normal second (top)
+    latency_layer.add_to(m)
+    normal_layer.add_to(m)
+    
+    # Add layer control with overlay=True to prevent base layer behavior
+    folium.LayerControl(collapsed=False).add_to(m)
 
     # Add color legends
     normal_colormap = folium.branca.colormap.LinearColormap(

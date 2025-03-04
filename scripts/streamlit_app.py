@@ -1,10 +1,10 @@
 import streamlit as st
 from pathlib import Path
 import pandas as pd
-import pickle
-import sys
+# import pickle
+# import sys
 from datetime import datetime
-import os
+# import os
 
 from latency_maps import (
     load_month_data, 
@@ -19,15 +19,15 @@ MAPS_DIR = BASE_DIR / "maps"
 
 # Set page configuration
 st.set_page_config(
-    page_title="GPS Latency Analysis",
+    page_title="GPS Latency Dashboard",
     page_icon="🌐",
     layout="wide"
 )
 
 def main():
     # Title and description
-    st.title("GPS Latency Analysis Dashboard")
-    st.markdown("Analyze GPS data latency patterns with interactive maps")
+    st.title("GPS Latency Monthly Analysis Dashboard")
+    # st.markdown("Analyze GPS data latency patterns with interactive maps")
     
     # Sidebar with controls
     st.sidebar.header("Controls")
@@ -55,8 +55,11 @@ def main():
     # Map type selection
     map_type = st.sidebar.radio(
         "Select Map Type",
-        ["Global Latency Overview", "Dual GPS Heatmap", "Geofence Detail"]
+        ["GPS Latency in Geofences", "GPS Heatmap (dual)", "Geofence Detail"]
     )
+
+    # Add force recreate button
+    force_recreate = st.sidebar.button("Refresh Map")
     
     # Load data or display error
     try:
@@ -80,14 +83,14 @@ def main():
                 st.metric("High Latency Points (%)", f"{latency_pct:.1f}%")
         
         # Based on map type, create the appropriate map
-        if map_type == "Global Latency Overview":
-            st.subheader(f"Global Latency Overview - {month_name} {year}")
+        if map_type == "GPS Latency in Geofences":
+            st.subheader(f"GPS Latency in Geofences - {month_name} {year}")
             
             # Check if map already exists
             map_filename = f"{customer_name}_global_latency_{year}_{month}.html"
             map_filepath = MAPS_DIR / map_filename
             
-            if map_filepath.exists():
+            if map_filepath.exists() and not force_recreate:
                 # Load existing map
                 with open(map_filepath, 'r') as f:
                     map_html = f.read()
@@ -108,14 +111,14 @@ def main():
             # Display the map
             st.components.v1.html(map_html, height=600)
             
-        elif map_type == "Dual GPS Heatmap":
-            st.subheader(f"Dual GPS Heatmap - {month_name} {year}")
+        elif map_type == "GPS Heatmap (dual)":
+            st.subheader(f"GPS Heatmap. Latency vs. Normal Reports - {month_name} {year}")
             
             # Check if map already exists
             map_filename = f"{customer_name}_dual_heatmap_{year}_{month}.html"
             map_filepath = MAPS_DIR / map_filename
             
-            if map_filepath.exists():
+            if map_filepath.exists() and not force_recreate:
                 # Load existing map
                 with open(map_filepath, 'r') as f:
                     map_html = f.read()
@@ -154,7 +157,7 @@ def main():
             map_filename = f"{customer_name}_geofence_{selected_geofence}_{year}_{month}.html"
             map_filepath = MAPS_DIR / map_filename
             
-            if map_filepath.exists():
+            if map_filepath.exists() and not force_recreate:
                 # Load existing map
                 with open(map_filepath, 'r') as f:
                     map_html = f.read()
