@@ -13,9 +13,7 @@ from latency_maps import (
     plot_gps_per_polygon
 )
 
-BASE_DIR = Path(__file__).parent.parent.absolute()
-PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
-MAPS_DIR = BASE_DIR / "maps"
+from config import BASE_DIR, PROCESSED_DATA_DIR, MAPS_DIR, LATENCY_THRESHOLD_HOURS
 
 # Set page configuration
 st.set_page_config(
@@ -70,17 +68,23 @@ def main():
         
         gps_df, polygons_df, polygon_dict = data
         
-        # Display basic stats
-        with st.expander("Dataset Statistics", expanded=False):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Total GPS Points", f"{len(gps_df):,}")
-            with col2:
-                st.metric("Total Geofences", f"{len(polygons_df):,}")
-            with col3:
-                latency_count = len(gps_df[gps_df['t_diff'] >= pd.Timedelta(hours=24)])
-                latency_pct = (latency_count / len(gps_df)) * 100
-                st.metric("High Latency Points (%)", f"{latency_pct:.1f}%")
+        # # Display basic stats
+        # with st.expander("Dataset Statistics", expanded=False):
+        #     col1, col2, col3 = st.columns(3)
+        #     with col1:
+        #         st.metric("Total GPS Points", f"{len(gps_df):,}")
+        #     with col2:
+        #         st.metric("Total Geofences", f"{len(polygons_df):,}")
+        #     with col3:
+        #         latency_count = len(gps_df[gps_df['t_diff'] >= pd.Timedelta(hours=24)])
+        #         latency_pct = (latency_count / len(gps_df)) * 100
+        #         st.metric("High Latency Points (%)", f"{latency_pct:.1f}%")
+
+        # Display consistent statistics section (always visible)
+        with st.container():
+            # Add a title for the statistics section
+            st.subheader(f"Monthly Statistics: {month_name} {year}")
+            display_dashboard_statistics(gps_df, polygons_df, customer_name, LATENCY_THRESHOLD_HOURS)
         
         # Based on map type, create the appropriate map
         if map_type == "GPS Latency in Geofences":
@@ -198,6 +202,100 @@ def main():
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         st.exception(e)
+
+
+def display_dashboard_statistics(gps_df, polygons_df, customer_name, latency_threshold_hours):
+    """
+    Display consistent statistics across all dashboard pages
+    
+    Args:
+        gps_df: Processed GPS DataFrame
+        polygons_df: Geofence statistics DataFrame
+        customer_name: Name of the customer
+        latency_threshold_hours: Threshold in hours to consider high latency
+    """
+    # Calculate key statistics
+    total_gps = len(gps_df)
+    unique_devices = gps_df['DeviceID'].nunique()
+    total_geofences = len(polygons_df)
+    
+    # Calculate land-based stats
+    land_gps = gps_df[~gps_df['in_Sea']]
+    total_land_gps = len(land_gps)
+    land_pct = (total_land_gps / total_gps) * 100 if total_gps > 0 else 0
+    
+    # Calculate latency stats for land-based points only
+    latency_threshold = pd.Timedelta(hours=latency_threshold_hours)
+    land_latency = land_gps[land_gps['t_diff'] >= latency_threshold]
+    latency_count = len(land_latency)
+    latency_pct = (latency_count / total_land_gps) * 100 if total_land_gps > 0 else 0
+    
+    # Create stat cards with an f-string
+    html = f"""
+    <style>
+    .stat-container {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }}
+    .stat-card {{
+        flex: 1;
+        min-width: 200px;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }}
+    .stat-title {{
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }}
+    .stat-value {{
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #495057;
+    }}
+    .stat-subvalue {{
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 3px;
+    }}
+    .land-card {{
+        background-color: #f8f8f8;
+        border-left: 4px solid #4CAF50;
+    }}
+    .latency-card {{
+        background-color: #f8f8f8;
+        border-left: 4px solid #ff9800;
+    }}
+    </style>
+    
+    <div class="stat-container">
+        <div class="stat-card">
+            <div class="stat-title">GPS Reports</div>
+            <div class="stat-value">{total_gps:,}</div>
+            <div class="stat-subvalue">From {unique_devices:,} unique devices</div>
+        </div>
+        <div class="stat-card land-card">
+            <div class="stat-title">GPS on Land</div>
+            <div class="stat-value">{total_land_gps:,}</div>
+            <div class="stat-subvalue">{land_pct:.1f}% of total reports</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">{customer_name} Geofences</div>
+            <div class="stat-value">{total_geofences:,}</div>
+        </div>
+        <div class="stat-card latency-card">
+            <div class="stat-title">High Latency (≥{latency_threshold_hours}h)</div>
+            <div class="stat-value">~{latency_pct:.1f}%</div>
+            <div class="stat-subvalue">{round(latency_count/1000)}K of {round(total_land_gps/1000)}K reports on land</div>
+        </div>
+    </div>
+    """
+    
+    st.markdown(html, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
