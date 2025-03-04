@@ -1,4 +1,4 @@
-from data_processing import load_persistent_spatial_index
+from data_processing import build_spatial_index
 from data_query import prompt_for_month
 
 import folium
@@ -96,7 +96,7 @@ def plot_gps_per_polygon(polygons_df, geofence_name, gps_df,customer_name='Zim',
     """Plot single polygon with its GPS points"""
     polygon_data = polygons_df[polygons_df['LocationName'] == geofence_name].iloc[0]    
 
-    _, polygon_dict = load_persistent_spatial_index(customer_name)
+    _, polygon_dict = build_spatial_index(polygons_df)
 
     # Get the polygon index
     polygon_idx = polygons_df[polygons_df['LocationName'] == geofence_name].index[0]
@@ -115,8 +115,11 @@ def plot_gps_per_polygon(polygons_df, geofence_name, gps_df,customer_name='Zim',
     m = folium.Map(location=[float(center_lat), float(center_lon)], zoom_start=base_zoom)
     
     # Color polygon based on severity
-    max_severity = polygons_df['severity'].max()
-    color = get_color(polygon_data['severity'], max_severity)
+    if polygon_data['total_messages'] == 0:
+        color = 'darkgray' 
+    else:
+        max_severity = polygons_df['severity'].max()
+        color = get_color(polygon_data['severity'], max_severity)
     
     # Add polygon outline
     folium.Polygon(
@@ -359,15 +362,7 @@ def plot_dual_gps_heatmap(df,month, latency_H=24, lat_col='Lat', lon_col='Lon', 
 
 def load_month_data(year_month, customer_name='Zim'):
     """
-    Load all processed data files for a specific month.
-    
-    Args:
-        year_month (str): Month in YYYY-MM format
-        customer_name (str): Customer name, defaults to 'Zim'
-        processed_data_dir (Path): Directory containing processed data files
-        
-    Returns:
-        tuple: (gps_df, polygons_df, polygon_dict) or None if files not found
+    Load all data files of a required month.
     """
     year, month = year_month.split('-')
     

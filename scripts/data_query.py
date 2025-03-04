@@ -204,7 +204,7 @@ def main():
     else:
         year_month = get_default_month()
     
-    print(f"Extracting GPS data for {args.customer} in {year_month}...")
+    # print(f"Extracting GPS data for {args.customer} in {year_month}...")
     
     try:
         # Get the data
