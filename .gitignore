@@ -1,10 +1,13 @@
-# Large data files
-/data/
+# Virtual Environment
+.venv-latency-app/
 
-# Optional: Common patterns to ignore
+# System files
 __pycache__/
 .DS_Store
 **/.DS_Store
+
+# Large data files
+/data/
 
 # Maps themself
 /maps/

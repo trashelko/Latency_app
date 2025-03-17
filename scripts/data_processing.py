@@ -1,4 +1,4 @@
-from data_query import get_default_month, prompt_for_month
+from utils import get_default_month, prompt_for_month
 from config import BASE_DIR,RAW_DATA_DIR,PROCESSED_DATA_DIR,DEFAULT_CUSTOMER
 
 # Essential libraries
@@ -70,22 +70,16 @@ def build_and_save_persistent_spatial_index(customer_name="Zim"):
     that doesn't need to be recreated monthly.
     """
     
-    # # Set up paths for the project
-    # BASE_DIR = Path(__file__).parent.parent.absolute()
-    # RAW_DATA_DIR = BASE_DIR / "data" / "raw"
-    # PROCESSED_DATA_DIR = BASE_DIR / "data" / "processed"
-    # PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    
     # Load polygons data
     filename = f"geofences_{customer_name}.csv"
     filepath = RAW_DATA_DIR / filename
     if not filepath.exists():
         raise FileNotFoundError(f"{customer_name} geofences data file not found: {filepath}")
     
-    polygons_df = pd.read_csv(filepath, usecols=['LocationName', 'Polygon'])
+    polygons_df = pd.read_csv(filepath, usecols=['LocationName','CountryCode','Polygon']) # added 'CountryCode' column
+
+    # Build spatial index and polygon dictionary
     print(f"Building persistent spatial index for {len(polygons_df)} {customer_name} geofences")
-    
-    # Build the spatial index and polygon dictionary
     spatial_idx, polygon_dict = build_spatial_index(polygons_df)
     
     # Save as persistent files (no month/year in filename)

@@ -7,14 +7,11 @@ TO ADD in the future
 """
 from utils import prompt_for_month, get_default_month
 from config import RAW_DATA_DIR
-from credentials import (
-    DB_NEW_CONFIG
-)
+from credentials import DB_NEW_CONFIG
 
 # Essetial libraries
 import pandas as pd
 import time
-from pathlib import Path
 import argparse
 from datetime import datetime
 
@@ -40,16 +37,7 @@ def get_db_connection(config):
 
 def get_gps_data(year_month, max_retries=3, retry_delay=5, customer_name="Zim"):
     """
-    Retrieves GPS data from the Bursts table for a specific month with retry logic.
-    
-    Args:
-        year_month: Month in 'YYYY-MM' format
-        max_retries: Maximum number of retry attempts
-        retry_delay: Delay between retries in seconds
-        customer_name: Name of the customer to filter by
-        
-    Returns:
-        DataFrame containing the query results
+    Retrieves GPS data from the database for a specific month with retry logic.
     """
     # Parse year and month
     try:

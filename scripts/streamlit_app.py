@@ -31,7 +31,7 @@ def main():
     st.sidebar.header("Controls")
     
     # Available months
-    available_months = ["2024-11", "2024-12", "2025-01", "2025-02"]
+    available_months = ["2024-11", "2024-12", "2025-01", "2025-02", "2025-03"]
     
     # Month selection
     selected_month = st.sidebar.selectbox(
@@ -53,7 +53,7 @@ def main():
     # Map type selection
     map_type = st.sidebar.radio(
         "Select Map Type",
-        ["GPS Latency in Geofences", "GPS Heatmap (dual)", "Geofence Detail"]
+        ["GPS Latency in Geofences", "GPS Heatmap (dual)", "Single Geofence View"]
     )
 
     # Add force recreate button
@@ -144,8 +144,8 @@ def main():
             # Display the map
             st.components.v1.html(map_html, height=600)
             
-        elif map_type == "Geofence Detail":
-            st.subheader(f"Geofence Detail - {month_name} {year}")
+        elif map_type == "Single Geofence View":
+            st.subheader(f"Single Geofence View - {month_name} {year}")
             
             # Get list of geofences
             geofence_options = polygons_df['LocationName'].tolist()
@@ -299,3 +299,6 @@ def display_dashboard_statistics(gps_df, polygons_df, customer_name, latency_thr
 
 if __name__ == "__main__":
     main()
+
+# TO RUN:
+# streamlit run ./scripts/streamlit_app.py  
