@@ -3,14 +3,13 @@ from config import BASE_DIR,RAW_DATA_DIR,PROCESSED_DATA_DIR,DEFAULT_CUSTOMER
 
 # Essential libraries
 import pandas as pd
-from pathlib import Path
 import numpy as np
 import datetime
 import pickle
 import argparse
 from datetime import datetime
-# import random
 import warnings
+import pycountry
 
 # Spatial analysis
 from shapely.geometry import Point, Polygon
@@ -246,6 +245,16 @@ def get_geofence_stats(polygons_df: pd.DataFrame, gps_data: pd.DataFrame,
     
     return result_df
 
+def get_country_name(country_code):
+    """
+    Convert a country code to a country name using pycountry.
+    """
+    try:
+        country = pycountry.countries.get(alpha_2=country_code)
+        return country.name if country else np.nan
+    except:
+        return np.nan
+
 def get_processed_gpsData_and_polygons(
     year_month: str,
     customer_name: str = "Zim",
@@ -277,7 +286,9 @@ def get_processed_gpsData_and_polygons(
     # print(f"Loading {customer_name} geofences data from: {filepath}")
     if not filepath.exists():
         raise FileNotFoundError(f"{customer_name} geofences data file not found: {filepath}")
-    polygons_df = pd.read_csv(filepath, usecols=['LocationName', 'Polygon']) # Only load necessary columns
+    polygons_df = pd.read_csv(filepath, usecols=['LocationName','CountryCode','Polygon'])
+    polygons_df['Country'] = polygons_df['CountryCode'].apply(get_country_name)
+    polygons_df = polygons_df[['LocationName', 'CountryCode', 'Country', 'Polygon']]
     print(f"Loaded {len(polygons_df)} geofences for {customer_name} from {filepath}")
 
     print(f"Processing GPS data...")
