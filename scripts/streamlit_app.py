@@ -1,10 +1,6 @@
 import streamlit as st
-from pathlib import Path
 import pandas as pd
-# import pickle
-# import sys
 from datetime import datetime
-# import os
 
 from latency_maps import (
     load_month_data, 
@@ -14,6 +10,9 @@ from latency_maps import (
 )
 
 from config import BASE_DIR, PROCESSED_DATA_DIR, MAPS_DIR, LATENCY_THRESHOLD_HOURS
+
+# TO RUN:
+# streamlit run ./scripts/streamlit_app.py    
 
 # Set page configuration
 st.set_page_config(

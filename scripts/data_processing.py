@@ -63,41 +63,41 @@ def build_spatial_index(polygons_df: pd.DataFrame) -> Tuple[index.Index, Dict]:
     
     return idx, polygon_dict
 
-def build_and_save_persistent_spatial_index(customer_name="Zim"):
-    """
-    Build and save a persistent spatial index and polygon dictionary
-    that doesn't need to be recreated monthly.
-    """
+# def build_and_save_persistent_spatial_index(customer_name="Zim"):
+#     """
+#     Build and save a persistent spatial index and polygon dictionary
+#     that doesn't need to be recreated monthly.
+#     """
     
-    # Load polygons data
-    filename = f"geofences_{customer_name}.csv"
-    filepath = RAW_DATA_DIR / filename
-    if not filepath.exists():
-        raise FileNotFoundError(f"{customer_name} geofences data file not found: {filepath}")
+#     # Load polygons data
+#     filename = f"geofences_{customer_name}.csv"
+#     filepath = RAW_DATA_DIR / filename
+#     if not filepath.exists():
+#         raise FileNotFoundError(f"{customer_name} geofences data file not found: {filepath}")
     
-    polygons_df = pd.read_csv(filepath, usecols=['LocationName','CountryCode','Polygon']) # added 'CountryCode' column
+#     polygons_df = pd.read_csv(filepath, usecols=['LocationName','CountryCode','Polygon']) # added 'CountryCode' column
 
-    # Build spatial index and polygon dictionary
-    print(f"Building persistent spatial index for {len(polygons_df)} {customer_name} geofences")
-    spatial_idx, polygon_dict = build_spatial_index(polygons_df)
+#     # Build spatial index and polygon dictionary
+#     print(f"Building persistent spatial index for {len(polygons_df)} {customer_name} geofences")
+#     spatial_idx, polygon_dict = build_spatial_index(polygons_df)
     
-    # Save as persistent files (no month/year in filename)
-    spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
-    polygon_dict_path = PROCESSED_DATA_DIR / f"polygon_dict_{customer_name}.pkl"
+#     # Save as persistent files (no month/year in filename)
+#     spatial_idx_path = PROCESSED_DATA_DIR / f"spatial_idx_{customer_name}.pkl"
+#     polygon_dict_path = PROCESSED_DATA_DIR / f"polygon_dict_{customer_name}.pkl"
     
-    # Save polygon dictionary
-    with open(polygon_dict_path, 'wb') as f:
-        pickle.dump(polygon_dict, f)
+#     # Save polygon dictionary
+#     with open(polygon_dict_path, 'wb') as f:
+#         pickle.dump(polygon_dict, f)
     
-    # Save spatial index (if needed - depends on how you use it)
-    with open(spatial_idx_path, 'wb') as f:
-        pickle.dump(spatial_idx, f)
+#     # Save spatial index (if needed - depends on how you use it)
+#     with open(spatial_idx_path, 'wb') as f:
+#         pickle.dump(spatial_idx, f)
     
-    print(f"Saved spatial index and polygon dictionary for latest {customer_name} geofences.")
-    # print(f"  - Spatial index: {spatial_idx_path}")
-    # print(f"  - Polygon dict: {polygon_dict_path}")
+#     print(f"Saved spatial index and polygon dictionary for latest {customer_name} geofences.")
+#     # print(f"  - Spatial index: {spatial_idx_path}")
+#     # print(f"  - Polygon dict: {polygon_dict_path}")
     
-    return spatial_idx, polygon_dict
+#     return spatial_idx, polygon_dict
 
 # def load_persistent_spatial_index(customer_name="Zim"):
 #     """
@@ -346,7 +346,7 @@ def save_processed_data(processed_gps, polygon_stats, polygon_dict, customer_nam
     processed_gps.to_csv(gps_filepath, index=False)
     
     # Save geofence statistics as CSV
-    stats_filename = f"processed_geofence_stats_{customer_name}_{year}_{month}.csv"
+    stats_filename = f"geofence_stats_{customer_name}_{year}_{month}.csv"
     stats_filepath = PROCESSED_DATA_DIR / stats_filename
     polygon_stats.to_csv(stats_filepath, index=False)
     

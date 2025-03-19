@@ -5,7 +5,6 @@ import folium
 import numpy as np
 import pandas as pd
 from folium.plugins import HeatMap, MarkerCluster
-from shapely.geometry import Polygon
 from matplotlib import colors as mcolors
 import matplotlib.pyplot as plt
 import pickle
@@ -374,7 +373,7 @@ def load_month_data(year_month, customer_name='Zim'):
     
     # Construct filenames
     gps_filename = f"processed_gps_data_{customer_name}_{year}_{month}.csv"
-    stats_filename = f"processed_geofence_stats_{customer_name}_{year}_{month}.csv"
+    stats_filename = f"geofence_stats_{customer_name}_{year}_{month}.csv"
     dict_filename = f"polygon_dict_{customer_name}.pkl"
     
     # Construct file paths
